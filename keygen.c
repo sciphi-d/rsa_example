@@ -49,8 +49,8 @@ int generate_rsa_key_pair(const char *private_key_path, const char *public_key_p
 }
 
 int main() {
-    char * private_key_path = "private_key.pem";
-    char * public_key_path  = "public_key.pem" ;
+    char * private_key_path = "out/private_key.pem";
+    char * public_key_path  = "out/public_key.pem" ;
     int res = generate_rsa_key_pair(private_key_path, public_key_path, 1024);
     return res;
 }

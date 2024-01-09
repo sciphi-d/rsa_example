@@ -8,28 +8,28 @@
 
 // decrypt.c
 
-int decrypt_message(const unsigned char *encrypted_data, size_t encrypted_len, const char *private_key_path, char **decrypted_message) {
+int decrypt_message(const unsigned char *encrypted_data, size_t encrypted_len, const char *public_key_path, char **decrypted_message) {
     RSA *rsa_key = NULL;
-    FILE *private_key_file = fopen(private_key_path, "r");
+    FILE *public_key_file = fopen(public_key_path, "r");
 
-    if (!private_key_file) {
-        perror("Error opening private key file");
+    if (!public_key_file) {
+        perror("Error opening public key file");
         return 1;
     }
 
-    // Use BIO to read the private key
-    BIO *bio = BIO_new_fp(private_key_file, BIO_CLOSE);
-    rsa_key = PEM_read_bio_RSAPrivateKey(bio, NULL, NULL, NULL);
-    fclose(private_key_file);
+    // Use BIO to read the public key
+    BIO *bio = BIO_new_fp(public_key_file, BIO_CLOSE);
+    rsa_key = PEM_read_bio_RSAPublicKey(bio, NULL, NULL, NULL);
+    fclose(public_key_file);
     //BIO_free(bio);
 
     if (!rsa_key) {
-        fprintf(stderr, "Error loading private key\n");
+        fprintf(stderr, "Error loading public key\n");
         return 1;
     }
 
     *decrypted_message = (char *)malloc(encrypted_len);
-    int decrypted_len = RSA_private_decrypt(encrypted_len, encrypted_data, (unsigned char *)(*decrypted_message), rsa_key, RSA_PKCS1_PADDING);
+    int decrypted_len = RSA_public_decrypt(encrypted_len, encrypted_data, (unsigned char *)(*decrypted_message), rsa_key, RSA_PKCS1_PADDING);
 
     if (decrypted_len == -1) {
         fprintf(stderr, "Error decrypting message\n");
@@ -44,8 +44,8 @@ int decrypt_message(const unsigned char *encrypted_data, size_t encrypted_len, c
 }
 
 int main() {
-    const char *private_key_path = "private_key.pem";
-    FILE *encrypted_file = fopen("encrypted_data.bin", "rb");
+    const char *public_key_path = "out/public_key.pem";
+    FILE *encrypted_file = fopen("out/encrypted_data.bin", "rb");
     fseek(encrypted_file, 0, SEEK_END);
     size_t encrypted_file_size = ftell(encrypted_file);
     rewind(encrypted_file);
@@ -55,7 +55,7 @@ int main() {
     fclose(encrypted_file);
 
     char *decrypted_message;
-    if (decrypt_message(encrypted_data, encrypted_file_size, private_key_path, &decrypted_message) != 0) {
+    if (decrypt_message(encrypted_data, encrypted_file_size, public_key_path, &decrypted_message) != 0) {
         fprintf(stderr, "Decryption failed\n");
         return 1;
     }
